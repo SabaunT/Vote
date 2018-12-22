@@ -84,7 +84,7 @@ contract Vote {
     /**
     @dev method which finalize the voting event by honoring winners with losers tokens. Called only after deadline.
     @return winner name
-     */
+     */ 
     function honorWinners() public isEnded returns (bytes32) {
         require(isDraw == false, "voting event ended up with raw");
         bytes32 _winnerName = _findWinner();
