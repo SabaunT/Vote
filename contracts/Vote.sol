@@ -90,7 +90,7 @@ contract Vote {
         bytes32 _winnerName = _findWinner();
         uint winnersPrey = erc20Communication.balanceOf(address(this)) - totalVotesForCandidate(_winnerName);
         for (uint i = 0; i < votersList.length; i++) {
-            if (votersData[votersList[i]].choice ==_winnerName) {
+            if (votersData[votersList[i]].choice == _winnerName) {
                 votersData[votersList[i]].voices += (winnersPrey * votersData[votersList[i]].voices)/totalVotesForCandidate(_winnerName);              
             } else {
                 votersData[votersList[i]].voices = 0;
