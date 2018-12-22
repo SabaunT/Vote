@@ -9,7 +9,7 @@ interface TokenAction {
 @title Vote
 @author Sabaun Taraki (@SabaunT).
 @notice Just a simple ERC20 Voting contract, requires voting only for 1 candidate.
-Description: https://github.com/SabaunT/Vote
+Description: 
  */
 contract Vote {
 
@@ -25,6 +25,8 @@ contract Vote {
         require(votingDeadline <= now, "voting event still lasts");
         _;
     }
+
+    bool isDraw;
 
     uint votingDeadline;
 
@@ -83,11 +85,12 @@ contract Vote {
     @dev method which finalize the voting event by honoring winners with losers tokens. Called only after deadline.
     @return winner name
      */
-    function honorWinners() public isEnded returns (bytes32) { 
+    function honorWinners() public isEnded returns (bytes32) {
+        require(isDraw == false, "voting event ended up with raw");
         bytes32 _winnerName = _findWinner();
         uint winnersPrey = erc20Communication.balanceOf(address(this)) - totalVotesForCandidate(_winnerName);
         for (uint i = 0; i < votersList.length; i++) {
-            if (votersData[votersList[i]].choice == _winnerName) {
+            if (votersData[votersList[i]].choice ==_winnerName) {
                 votersData[votersList[i]].voices += (winnersPrey * votersData[votersList[i]].voices)/totalVotesForCandidate(_winnerName);              
             } else {
                 votersData[votersList[i]].voices = 0;
@@ -123,13 +126,18 @@ contract Vote {
     @dev an internal method used by honorWinners method to find a winner.
     @return winner name.
      */
-    function _findWinner() internal view isEnded returns (bytes32) {
+    function _findWinner() internal isEnded returns (bytes32) {
         bytes32 winner = "";
         uint maxVotes = 0;
         for (uint i = 0; i < candidates.length; i++) {
             if (votesForCandidates[candidates[i]] > maxVotes) {
-                winner = candidates[i];
-                maxVotes = votesForCandidates[candidates[i]];
+                if (winner != candidates[i]) {
+                    winner = candidates[i];
+                    maxVotes = votesForCandidates[candidates[i]];
+                    isDraw = false;
+                } else {
+                    isDraw = true;
+                }
             }
         }
         return winner;
