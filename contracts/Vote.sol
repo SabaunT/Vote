@@ -130,7 +130,7 @@ contract Vote {
         bytes32 winner = "";
         uint maxVotes = 0;
         for (uint i = 0; i < candidates.length; i++) {
-            if (votesForCandidates[candidates[i]] > maxVotes) {
+            if (votesForCandidates[candidates[i]] >= maxVotes) {
                 if (winner != candidates[i]) {
                     winner = candidates[i];
                     maxVotes = votesForCandidates[candidates[i]];
