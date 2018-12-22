@@ -10,7 +10,7 @@ interface TokenAction {
 @title Vote
 @author Sabaun Taraki (@SabaunT).
 @notice Just a simple ERC20 Voting contract, requires voting only for 1 candidate.
-Description: 
+Description: https://github.com/SabaunT/Vote
  */
 contract Vote {
 
