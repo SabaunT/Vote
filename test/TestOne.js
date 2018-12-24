@@ -31,7 +31,7 @@ contract("TestToken & Vote contracts", async accounts => {
         //Calling balance method
         let balanceAddress1 = await instance.balanceOf(ADDRESS1);
         let balanceAddress2 = await instance.balanceOf(ADDRESS2);
-        let balanceAddress3 = await instance.balanceOf(ADDRESS3)
+        let balanceAddress3 = await instance.balanceOf(ADDRESS3);
         
         //Testing
         assert.equal(balanceAddress1.valueOf(), 10);
@@ -123,4 +123,15 @@ contract("TestToken & Vote contracts", async accounts => {
         assert.equal(thirdVoterVoicesRewarded.voices.valueOf(), 0);
     });
     
+    it("Checking voters balances on ERC20 contract", async () => {
+        let instance = await TestOne.deployed();
+
+        let balanceAddress1 = await instance.balanceOf(ADDRESS1);
+        let balanceAddress2 = await instance.balanceOf(ADDRESS2);
+        let balanceAddress3 = await instance.balanceOf(ADDRESS3);
+
+        assert.equal(balanceAddress1.valueOf(), 15);
+        assert.equal(balanceAddress2.valueOf(), 15);
+        assert.equal(balanceAddress3.valueOf(), 0);
+    });
 });
