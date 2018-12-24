@@ -3,6 +3,7 @@ pragma solidity ^0.5.0;
 interface TokenAction {
     function transferFrom(address from, address to, uint value) external returns (bool);
     function balanceOf(address who) external view returns (uint);
+    function transfer(address to, uint value) external returns (bool);
 }
 
 /**
@@ -91,7 +92,8 @@ contract Vote {
         uint winnersPrey = erc20Communication.balanceOf(address(this)) - totalVotesForCandidate(_winnerName);
         for (uint i = 0; i < votersList.length; i++) {
             if (votersData[votersList[i]].choice == _winnerName) {
-                votersData[votersList[i]].voices += (winnersPrey * votersData[votersList[i]].voices)/totalVotesForCandidate(_winnerName);              
+                votersData[votersList[i]].voices += (winnersPrey * votersData[votersList[i]].voices)/totalVotesForCandidate(_winnerName);
+                erc20Communication.transfer(votersList[i], votersData[votersList[i]].voices); //final - honoring transfer 
             } else {
                 votersData[votersList[i]].voices = 0;
             }
