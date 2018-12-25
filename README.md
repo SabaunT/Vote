@@ -24,7 +24,7 @@ You can test a `VoteCR.sol` contract, which uses commit - reveal mechanism. Almo
 The mechanism of getting hex, concatenated secret and candidate values is described below.
 
 ```
-solidity
+javascript
 pragma solidity ^0.5.0;
 
 contract Test{
