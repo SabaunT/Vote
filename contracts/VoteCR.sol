@@ -1,5 +1,7 @@
 pragma solidity ^0.5.0;
 
+import "./SafeMath.sol";
+
 interface TokenAction {
     function transferFrom(address from, address to, uint value) external returns (bool);
     function balanceOf(address who) external view returns (uint);
@@ -13,6 +15,8 @@ interface TokenAction {
 Description: 
  */
 contract VoteCR {
+
+    using SafeMath for uint;
 
     //called erc20 contract
     TokenAction erc20Communication;
@@ -40,10 +44,10 @@ contract VoteCR {
     struct VoterInfo {
         bool registered;
         bytes32 votersCommit;
-        bool isCommited;
-        bool isRevealed;
-        uint voices;
         bytes32 revealedCandidate;
+        bool isHonored;
+        uint voices;
+        
     }
     mapping (address => VoterInfo) public votersData;
 
@@ -70,11 +74,12 @@ contract VoteCR {
     @return true if processed successfully
      */
     function commitVote(bytes32 _votersCommit, uint amount) public isActive returns (bool) {
-        require(amount > 0 && votersData[msg.sender].registered == false && votersData[msg.sender].isCommited == false, "you are registered");
+        require(amount > 0 && votersData[msg.sender].registered == false, "you are registered");
+        require(erc20Communication.transferFrom(msg.sender, address(this), amount) == true, "invalid condition on ERC20");
         votersList.push(msg.sender);
-        votersData[msg.sender] = VoterInfo(true, _votersCommit, true, false, amount, "");
-        maxContractBalance += amount;
-        erc20Communication.transferFrom(msg.sender, address(this), amount);
+        votersData[msg.sender] = VoterInfo(true, _votersCommit, "", false, amount);
+        maxContractBalance = maxContractBalance.add(amount);
+        //erc20Communication.transferFrom(msg.sender, address(this), amount);
         emit Commited(msg.sender, "Commited vote");
         return true;
     }
@@ -86,12 +91,11 @@ contract VoteCR {
     @return true if processed without errors, otherwise - false
      */
     function revealVote(bytes32 _secret, bytes32 _candidate) public isEnded returns (bool) {
-        require(votersData[msg.sender].registered == true && votersData[msg.sender].isRevealed == false, "you have already revealed your commit");
+        require(votersData[msg.sender].registered == true && votersData[msg.sender].revealedCandidate == "", "you have already revealed your commit"); 
         require(votersData[msg.sender].votersCommit == keccak256(abi.encodePacked(_secret, _candidate)), "wrong data");
         if (_isValidCandidate(_candidate)) {
-            votesForCandidates[_candidate] += votersData[msg.sender].voices;
+            votesForCandidates[_candidate] = votesForCandidates[_candidate].add(votersData[msg.sender].voices);
             votersData[msg.sender].revealedCandidate = _candidate;
-            votersData[msg.sender].isRevealed = true;
             emit Revealed(msg.sender, _candidate);
             return true;
         } else {
@@ -99,14 +103,16 @@ contract VoteCR {
         }
     }
 
-    function honorWinners(address middle) public isEnded returns (bytes32) {
-        require(isDraw == false, "voting event ended up with draw");
-        require(votersData[msg.sender].isRevealed == true, "you should first reveal your commit");
+    function honorWinners(address yourAddress) public isEnded returns (bytes32) {
+        require(votersData[msg.sender].isHonored == false, "you have already been honored"); 
+        require(votersData[msg.sender].revealedCandidate != "", "you should first reveal your commit"); 
         bytes32 _winnerName = _findWinner();
-        uint winnersPrey = maxContractBalance - totalVotesForCandidate(_winnerName);
+        require(isDraw == false, "voting event ended up with draw");
+        uint winnersPrey = maxContractBalance.sub(totalVotesForCandidate(_winnerName));
         if (votersData[msg.sender].revealedCandidate == _winnerName) {
-            votersData[msg.sender].voices += (winnersPrey * votersData[msg.sender].voices)/totalVotesForCandidate(_winnerName);
-            erc20Communication.transfer(middle, votersData[msg.sender].voices); //final - honoring transfer         
+            votersData[msg.sender].voices = votersData[msg.sender].voices.add((winnersPrey.mul(votersData[msg.sender].voices)).div(totalVotesForCandidate(_winnerName)));
+            require(erc20Communication.transfer(yourAddress, votersData[msg.sender].voices) == true, "invalid condition on ERC20");
+            votersData[msg.sender].isHonored = true; 
         } else {
             votersData[msg.sender].voices = 0;
         }
@@ -128,7 +134,7 @@ contract VoteCR {
     
 
     function _findWinner() internal isEnded returns (bytes32) {
-        bytes32 winner = "";
+        bytes32 winner;
         uint maxVotes = 0;
         for (uint i = 0; i < candidates.length; i++) {
             if (votesForCandidates[candidates[i]] >= maxVotes) {

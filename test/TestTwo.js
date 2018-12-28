@@ -39,15 +39,12 @@ const DEADLINE = 10000; //sec in ms
 contract("TestToken & Vote contracts", async accounts => {
     it("3 addresses get 10 tokens each one, their balances are checked", async () => {
         let instance = await TestOne.deployed();
-        let tokenEmission = await instance.emitTokens;
 
         //First 3 addresses from Ganache GUI
-
-
         //Getting their tokens
-        tokenEmission(ADDRESS1, 10);
-        tokenEmission(ADDRESS2, 10);
-        tokenEmission(ADDRESS3, 10);
+        await instance.emitTokens(ADDRESS1, 10);
+        await instance.emitTokens(ADDRESS2, 10);
+        await instance.emitTokens(ADDRESS3, 10);
 
         //Calling balance method
         let balanceAddress1 = await instance.balanceOf(ADDRESS1);
@@ -70,14 +67,13 @@ contract("TestToken & Vote contracts", async accounts => {
 
     it("Call approve method and set allowance", async () => {
         let instance = await TestOne.deployed();
-        let approveMethod = await instance.approve;
 
         let VoteContract = await TestTwo.deployed();
         
         //Calling approve methods
-        approveMethod(VoteContract.address, 10, { from: ADDRESS1});
-        approveMethod(VoteContract.address, 10, { from: ADDRESS2});
-        approveMethod(VoteContract.address, 10, { from: ADDRESS3});
+        await instance.approve(VoteContract.address, 10, { from: ADDRESS1});
+        await instance.approve(VoteContract.address, 10, { from: ADDRESS2});
+        await instance.approve(VoteContract.address, 10, { from: ADDRESS3});
 
         //Geting allowance value
         let allowanceAddress1 = await instance.allowance(ADDRESS1, VoteContract.address);
@@ -93,12 +89,11 @@ contract("TestToken & Vote contracts", async accounts => {
 
     it("Commit votes from 3 addresses", async () => {
         let instance = await TestTwo.deployed();
-        let commitMethod = await instance.commitVote;
         let token = await TestOne.deployed();
 
-        commitMethod(hashFromADDRESS1, 10, {from: ADDRESS1});
-        commitMethod(hashFromADDRESS2, 10, {from: ADDRESS2});
-        commitMethod(hashFromADDRESS3, 10, {from: ADDRESS3});
+        await instance.commitVote(hashFromADDRESS1, 10, {from: ADDRESS1});
+        await instance.commitVote(hashFromADDRESS2, 10, {from: ADDRESS2});
+        await instance.commitVote(hashFromADDRESS3, 10, {from: ADDRESS3});
 
         let firstCommit = await instance.votersData.call(ADDRESS1);
         let secondCommit = await instance.votersData.call(ADDRESS2);
@@ -125,14 +120,6 @@ contract("TestToken & Vote contracts", async accounts => {
         await instance.revealVote("0x6669727374536563726574", candidateOne, {from: ADDRESS1});
         await instance.revealVote("0x7365636f6e64536563726574", candidateOne, {from: ADDRESS2});
         await instance.revealVote("0x7468697264536563726574", candidateTwo, {from: ADDRESS3});
-
-        let firstVoter = await instance.votersData.call(ADDRESS1);
-        let secondVoter = await instance.votersData.call(ADDRESS2);
-        let thirdVoter = await instance.votersData.call(ADDRESS3);
-
-        assert.equal(firstVoter.isRevealed, true);
-        assert.equal(secondVoter.isRevealed, true);
-        assert.equal(thirdVoter.isRevealed, true);
     });
 
     it("Ending vote event with honoring winners", async () => {

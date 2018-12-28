@@ -18,15 +18,12 @@ const DEADLINE = 30000; //sec in ms
 contract("TestToken & Vote contracts", async accounts => {
     it("3 addresses get 10 tokens each one, their balances are checked", async () => {
         let instance = await TestOne.deployed();
-        let tokenEmission = await instance.emitTokens;
 
         //First 3 addresses from Ganache GUI
-
-
         //Getting their tokens
-        tokenEmission(ADDRESS1, 10);
-        tokenEmission(ADDRESS2, 10);
-        tokenEmission(ADDRESS3, 10);
+        await instance.emitTokens(ADDRESS1, 10);
+        await instance.emitTokens(ADDRESS2, 10);
+        await instance.emitTokens(ADDRESS3, 10);
 
         //Calling balance method
         let balanceAddress1 = await instance.balanceOf(ADDRESS1);
@@ -49,14 +46,13 @@ contract("TestToken & Vote contracts", async accounts => {
 
     it("Call approve method and set allowance", async () => {
         let instance = await TestOne.deployed();
-        let approveMethod = await instance.approve;
 
         let VoteContract = await TestTwo.deployed();
         
         //Calling approve methods
-        approveMethod(VoteContract.address, 10, { from: ADDRESS1});
-        approveMethod(VoteContract.address, 10, { from: ADDRESS2});
-        approveMethod(VoteContract.address, 10, { from: ADDRESS3});
+        await instance.approve(VoteContract.address, 10, { from: ADDRESS1});
+        await instance.approve(VoteContract.address, 10, { from: ADDRESS2});
+        await instance.approve(VoteContract.address, 10, { from: ADDRESS3});
 
         //Geting allowance value
         let allowanceAddress1 = await instance.allowance(ADDRESS1, VoteContract.address);
@@ -72,20 +68,18 @@ contract("TestToken & Vote contracts", async accounts => {
 
     it("Register & vote from 3 addresses", async () => {
         let instance = await TestTwo.deployed();
-        let registerMethod = await instance.registerVoter;
-        let voteMethod = await instance.voteForYourCandidate;
        
         //First voter gives his voice
-        registerMethod(candidateOne, { from: ADDRESS1});
-        voteMethod(10, { from: ADDRESS1});
+        await instance.registerVoter(candidateOne, { from: ADDRESS1});
+        await instance.voteForYourCandidate(10, { from: ADDRESS1});
 
         //Second voter gives his voice
-        registerMethod(candidateOne, { from: ADDRESS2});
-        voteMethod(10, { from: ADDRESS2});
+        await instance.registerVoter(candidateOne, { from: ADDRESS2});
+        await instance.voteForYourCandidate(10, { from: ADDRESS2});
 
         //Third voter gives his voice
-        registerMethod(candidateTwo, { from: ADDRESS3});
-        voteMethod(10, { from: ADDRESS3});
+        await instance.registerVoter(candidateTwo, { from: ADDRESS3});
+        await instance.voteForYourCandidate(10, { from: ADDRESS3});
 
         let votesForFirstCandidate = await instance.totalVotesForCandidate(candidateOne);
         let votesForSecondCandidate = await instance.totalVotesForCandidate(candidateTwo);
