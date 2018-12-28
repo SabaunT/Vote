@@ -17,6 +17,29 @@ Tests were made to check if the contract and its methods behave like they should
 3. Registering the addresses in the Vote contract and voting for the choosen candidate;
 4. Ending vote event with finding a winner and rewarding those who gave voices for a winner with losers tokens. A Rewards is given to a winner in accordance with his voice - token stake in a winning group.
 
+Commit-reveal contract
+-----------------------
+You can test a `VoteCR.sol` contract, which uses commit - reveal mechanism. Almost all the methods are the same. The main difference between these contracts is that each voter should check if he won, because `Vote.sol` required one voter to send Tx to the `honorWinners()` method to **honor** winners.
+
+The mechanism of getting hex, concatenated secret and candidate values is described below.
+
+```solidity
+
+pragma solidity ^0.5.0;
+
+contract Test{
+
+    function getConcatenatedValue(bytes32 _secret, bytes32 _candidate) public pure returns (bytes memory){
+        bytes memory a = abi.encodePacked(_secret, _candidate);
+        return a;
+    }
+    
+    function getHash(bytes32 _secret, bytes32 _candidate) public pure returns (bytes32) {
+        bytes memory a = abi.encodePacked(_secret, _candidate);
+        return keccak256(a);
+    }
+}
+```
 
 
 Requirements
