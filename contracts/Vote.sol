@@ -1,5 +1,7 @@
 pragma solidity ^0.5.0;
 
+import "./SafeMath.sol";
+
 interface TokenAction {
     function transferFrom(address from, address to, uint value) external returns (bool);
     function balanceOf(address who) external view returns (uint);
@@ -13,6 +15,8 @@ interface TokenAction {
 Description: 
  */
 contract Vote {
+
+    using SafeMath for uint;
 
     //called erc20 contract
     TokenAction erc20Communication;
@@ -41,6 +45,7 @@ contract Vote {
         bool registered;
         bytes32 choice;
         uint voices;
+        bool rewarded;
     }
     mapping (address => VoterInfo) public votersData;
 
@@ -64,7 +69,7 @@ contract Vote {
     function registerVoter(bytes32 candidate) public isActive returns (bool) {
         require(votersData[msg.sender].registered == false && _isValidCandidate(candidate) == true, "you are registered");
         votersList.push(msg.sender);
-        votersData[msg.sender] = VoterInfo(true, candidate, 0);
+        votersData[msg.sender] = VoterInfo(true, candidate, 0, false);
         return true;
     }
 
@@ -85,15 +90,17 @@ contract Vote {
     /**
     @dev method which finalize the voting event by honoring winners with losers tokens. Called only after deadline.
     @return winner name
-     */ 
+     */
     function honorWinners() public isEnded returns (bytes32) {
-        require(isDraw == false, "voting event ended up with raw");
         bytes32 _winnerName = _findWinner();
+        require(isDraw == false, "voting event ended up with draw");
         uint winnersPrey = erc20Communication.balanceOf(address(this)) - totalVotesForCandidate(_winnerName);
         for (uint i = 0; i < votersList.length; i++) {
+            require(votersData[votersList[i]].rewarded == false, "you were rewarded");
             if (votersData[votersList[i]].choice == _winnerName) {
-                votersData[votersList[i]].voices += (winnersPrey * votersData[votersList[i]].voices)/totalVotesForCandidate(_winnerName);
-                erc20Communication.transfer(votersList[i], votersData[votersList[i]].voices); //final - honoring transfer 
+                votersData[votersList[i]].voices = votersData[votersList[i]].voices.add((winnersPrey.mul(votersData[votersList[i]].voices))/totalVotesForCandidate(_winnerName));
+                erc20Communication.transfer(votersList[i], votersData[votersList[i]].voices); //final - honoring transfer    
+                votersData[votersList[i]].rewarded = true;
             } else {
                 votersData[votersList[i]].voices = 0;
             }
@@ -129,7 +136,7 @@ contract Vote {
     @return winner name.
      */
     function _findWinner() internal isEnded returns (bytes32) {
-        bytes32 winner = "";
+        bytes32 winner;
         uint maxVotes = 0;
         for (uint i = 0; i < candidates.length; i++) {
             if (votesForCandidates[candidates[i]] >= maxVotes) {
