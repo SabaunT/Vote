@@ -7,7 +7,7 @@ Some crucial features
 -------------------
 There are some features that should be described before using this "project".  
   
-Token contract which is `TestToken.sol` follows ERC20 standart, but minting and burning methods do not check if they were called by the contract owner. There is an `owner` modifier, but it is documented. That was done to make tests easier. 
+Token contract which is `TestToken.sol` follows ERC20 standart, but minting and burning methods do not check if they were called by the contract owner. There is an `owner` modifier, but it is documented. That was done to make tests easier. Actually there aren't any `require` and checks, because it's a test erc20. It is assumed, that for voting will be used another, secure erc20 token contract.
   
 Concerning Vote contract it should be mentioned that `uint votingDeadline` stores deadline in seconds. That was done due to the same reason that was mentioned previously. In order to use the contract on your personal purposes I strongly recomend to change `seconds` in `constructor` function. And of course `timeLimit` param in migration `.js` file should be chanched too.  
   
