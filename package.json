@@ -8,7 +8,7 @@
   "dependencies": {
     "chai": "^4.2.0",
     "chai-bignumber": "^3.0.0",
-    "npm": "^6.5.0"
+    "npm": "^6.13.4"
   },
   "devDependencies": {
     "truffle": "5.0.0"
